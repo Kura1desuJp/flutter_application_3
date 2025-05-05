@@ -1,21 +1,20 @@
 import 'package:flutter/material.dart';
-import 'presentation/screens/auth_screen.dart'; // переконайся, що шлях правильний
+import 'main_screen.dart';
 
 void main() {
-  runApp(const WeightLossCalendarApp());
+  runApp(MyApp());
 }
 
-class WeightLossCalendarApp extends StatelessWidget {
-  const WeightLossCalendarApp({super.key});
-
+class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Weight Loss Calendar',
+      title: '2FA Authenticator',
       theme: ThemeData(
         primarySwatch: Colors.blue,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: const AuthScreen(), // Підключаємо AuthScreen
+      home: MainScreen(),
     );
   }
 }
