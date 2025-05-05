@@ -16,12 +16,14 @@ class _MainScreenState extends State<MainScreen>
   late Timer _timer;
   late ValueNotifier<int> _secondsRemaining;
   late ValueNotifier<double> _progress;
+  late ValueNotifier<DateTime> _tick;
 
   @override
   void initState() {
     super.initState();
     _secondsRemaining = ValueNotifier<int>(30);
     _progress = ValueNotifier<double>(1.0);
+    _tick = ValueNotifier(DateTime.now());
     _startTimer();
   }
 
@@ -41,6 +43,11 @@ class _MainScreenState extends State<MainScreen>
 
     _secondsRemaining.value = (remaining / 1000).floor();
     _progress.value = remaining / 30000;
+
+    if (second % 30 == 0 && milli < 120) {
+      // Trigger update only once per new cycle
+      _tick.value = DateTime.now();
+    }
   }
 
   @override
@@ -101,98 +108,105 @@ class _MainScreenState extends State<MainScreen>
               itemCount: codes.length,
               itemBuilder: (context, index) {
                 final code = codes[index];
-                final totp = TOTPGenerator.generate(code.secret);
+                return ValueListenableBuilder<DateTime>(
+                  valueListenable: _tick,
+                  builder: (context, time, _) {
+                    final totp = TOTPGenerator.generate(code.secret);
 
-                return Dismissible(
-                  key: Key(code.id.toString()),
-                  background: Container(color: Colors.red),
-                  confirmDismiss: (direction) async {
-                    return await showDialog(
-                      context: context,
-                      builder:
-                          (context) => AlertDialog(
-                            title: Text('Delete Code'),
-                            content: Text(
-                              'Are you sure you want to delete ${code.website}?',
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: Text('Cancel'),
-                              ),
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, true),
-                                child: Text(
-                                  'Delete',
-                                  style: TextStyle(color: Colors.red),
+                    return Dismissible(
+                      key: Key(code.id.toString()),
+                      background: Container(color: Colors.red),
+                      confirmDismiss: (direction) async {
+                        return await showDialog(
+                          context: context,
+                          builder:
+                              (context) => AlertDialog(
+                                title: Text('Delete Code'),
+                                content: Text(
+                                  'Are you sure you want to delete ${code.website}?',
                                 ),
+                                actions: [
+                                  TextButton(
+                                    onPressed:
+                                        () => Navigator.pop(context, false),
+                                    child: Text('Cancel'),
+                                  ),
+                                  TextButton(
+                                    onPressed:
+                                        () => Navigator.pop(context, true),
+                                    child: Text(
+                                      'Delete',
+                                      style: TextStyle(color: Colors.red),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
+                        );
+                      },
+                      onDismissed: (direction) async {
+                        await DatabaseHelper.instance.deleteCode(code.id!);
+                        setState(() {});
+                      },
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: code.color,
+                          child: Text(
+                            code.website.isNotEmpty ? code.website[0] : '?',
+                            style: TextStyle(color: Colors.white),
                           ),
+                        ),
+                        title: Text(code.website),
+                        subtitle: Text(code.email),
+
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              totp,
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).primaryColor,
+                              ),
+                            ),
+                            SizedBox(width: 12),
+                            ValueListenableBuilder<int>(
+                              valueListenable: _secondsRemaining,
+                              builder: (context, seconds, _) {
+                                return Text(
+                                  '$seconds s',
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 12,
+                                  ),
+                                );
+                              },
+                            ),
+                            SizedBox(width: 8),
+                            SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: ValueListenableBuilder<double>(
+                                valueListenable: _progress,
+                                builder: (context, progress, _) {
+                                  return CircularProgressIndicator(
+                                    value: progress,
+                                    strokeWidth: 2,
+                                    backgroundColor: Colors.grey.shade300,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Theme.of(context).primaryColor,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        onTap: () => _navigateToEditScreen(context, code),
+                      ),
                     );
                   },
-                  onDismissed: (direction) async {
-                    await DatabaseHelper.instance.deleteCode(code.id!);
-                    setState(() {});
-                  },
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: code.color,
-                      child: Text(
-                        code.website.isNotEmpty ? code.website[0] : '?',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
-                    title: Text(code.website),
-                    subtitle: Text(code.email),
-
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          totp,
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).primaryColor,
-                          ),
-                        ),
-                        SizedBox(width: 12),
-                        ValueListenableBuilder<int>(
-                          valueListenable: _secondsRemaining,
-                          builder: (context, seconds, _) {
-                            return Text(
-                              '$seconds s',
-                              style: TextStyle(
-                                color: Colors.grey,
-                                fontSize: 12,
-                              ),
-                            );
-                          },
-                        ),
-                        SizedBox(width: 8),
-                        SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: ValueListenableBuilder<double>(
-                            valueListenable: _progress,
-                            builder: (context, progress, _) {
-                              return CircularProgressIndicator(
-                                value: progress,
-                                strokeWidth: 2,
-                                backgroundColor: Colors.grey.shade300,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Theme.of(context).primaryColor,
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    onTap: () => _navigateToEditScreen(context, code),
-                  ),
                 );
               },
             ),
