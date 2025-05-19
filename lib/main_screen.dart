@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_3/about_page.dart';
+import 'package:flutter_application_3/auth_screen.dart';
 import 'package:flutter_application_3/export_screen.dart';
 import 'package:intl/intl.dart';
 import 'database_helper.dart';
@@ -85,6 +86,15 @@ class _MainScreenState extends State<MainScreen>
               );
             },
             tooltip: 'Export Codes',
+          ),
+          IconButton(
+            icon: Icon(Icons.logout),
+            onPressed: () {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (_) => AuthScreen()),
+              );
+            },
+            tooltip: 'Logout',
           ),
         ],
       ),
