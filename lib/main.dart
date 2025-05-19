@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'main_screen.dart';
+import 'package:flutter_application_3/auth_screen.dart';
 
 void main() {
   runApp(MyApp());
@@ -42,10 +43,10 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
     // Navigate to main screen after delay
     Timer(const Duration(seconds: 3), () {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => MainScreen()),
-      );
-    });
+  Navigator.of(context).pushReplacement(
+    MaterialPageRoute(builder: (_) => AuthScreen()),
+  );
+});
   }
 
   @override
