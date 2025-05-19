@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_3/about_page.dart';
+import 'package:flutter_application_3/export_screen.dart';
 import 'package:intl/intl.dart';
 import 'database_helper.dart';
 import 'two_factor_code.dart';
@@ -61,7 +63,31 @@ class _MainScreenState extends State<MainScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('2FA Codes')),
+      appBar: AppBar(
+        title: Text('2FA Codes'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.info_outline),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => AboutPage()),
+              );
+            },
+            tooltip: 'About',
+          ),
+          IconButton(
+            icon: Icon(Icons.share),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ExportScreen()),
+              );
+            },
+            tooltip: 'Export Codes',
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _navigateToEditScreen(context),
         child: Icon(Icons.add),
